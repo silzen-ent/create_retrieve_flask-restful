@@ -16,8 +16,72 @@ db.init_app(app)
 
 api = Api(app)
 
+
+
 class Home(Resource):
-    pass
+    def get(self):
+
+        response_dict = {
+            "message": "Welcome to the Newsletter RESTful API",
+        }
+
+        response = make_response(
+            response_dict,
+            200
+        )
+        return response
+
+api.add_resource(Home, '/')
+
+
+
+class Newsletters(Resource):
+    # returns all of the records from the newsletters table
+    def get(self): # we define the HTTP verb we want to use in the method name
+
+        response_dict_list = [n.to_dict() for n in Newsletter.query.all()]
+
+        response = make_response(
+            response_dict_list,
+            200,
+        )
+        return response
+    
+    # creates a new record in the newsletters table
+    def post(self): # we define the HTTP verb we want to use in the method name
+        new_record = Newsletter(
+            title=request.form['title'],
+            body=request.form['body'],
+        )
+
+        db.session.add(new_record)
+        db.session.commit()
+
+        response_dict = new_record.to_dict()
+
+        response = make_response(
+            response_dict,
+            201,
+        )
+
+        return response
+# this is the endpoint for the Newsletters class.
+api.add_resource(Newsletters, '/newsletters')  # We only need 1 endpoint for this class, so we don't need to specify a method here.
+
+
+
+class NewsletterByID(Resource):
+    # returns a single record from the newsletters table
+    def get(self, id):
+        response_dict = Newsletter.query.filter_by(id=id).first().to_dict()
+
+        response = make_response(
+            response_dict,
+            200,
+        )
+        return response
+
+api.add_resource(NewsletterByID, '/newsletters/<int:id>')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
